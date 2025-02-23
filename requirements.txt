@@ -1,1 +1,1 @@
-rembg fastapi uvicorn streamlit
+streamlit fastapi rembg uvicorn nest-asyncio
