@@ -1,28 +1,15 @@
-from flask import Flask, render_template_string
+from fastapi import FastAPI, File, UploadFile
+from fastapi.responses import StreamingResponse
+from rembg import remove
+import io
 
-# Initialize Flask app
-app = Flask(__name__)
+app = FastAPI()
 
-# Define a simple route
-@app.route("/")
-def hello_world():
-    return render_template_string("""
-        <h1>Hello, World App</h1>
-        <p>Welcome to your first Flask app! 🎉</p>
-        <form action="/greet" method="post">
-            <button type="submit">Say Hello</button>
-        </form>
-    """)
+@app.post("/remove-bg/")
+async def remove_bg(file: UploadFile = File(...)):
+    input_image = await file.read()
+    output_image = remove(input_image)
+    return StreamingResponse(io.BytesIO(output_image), media_type="image/png")
 
-# Define a route for greeting
-@app.route("/greet", methods=["POST"])
-def greet():
-    return render_template_string("""
-        <h1>Hello, World! 👋</h1>
-        <p>You've just triggered a greeting from Flask!</p>
-        <a href="/">Go Back</a>
-    """)
-
-# Run the app
-if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=5000, debug=False)  # Disable debug mode
+# To run the API server
+# Command: uvicorn bg_removal_api:app --host 0.0.0.0 --port 8000
