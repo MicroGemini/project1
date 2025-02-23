@@ -1,4 +1,1 @@
 streamlit
-rembg
-Pillow
-onnxruntime
