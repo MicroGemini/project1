@@ -1,38 +1,26 @@
 import streamlit as st
-from fastapi import FastAPI, File, UploadFile
-from fastapi.responses import StreamingResponse
 from rembg import remove
+from PIL import Image
 import io
-import nest_asyncio
-import threading
 import uvicorn
+from fastapi import FastAPI, File, UploadFile
+from fastapi.responses import JSONResponse
+import os
 
-# Initialize FastAPI app
+# FastAPI instance
 app = FastAPI()
 
-# Background removal endpoint
-@app.post("/remove-bg/")
+@app.post("/remove-bg")
 async def remove_bg(file: UploadFile = File(...)):
     input_image = await file.read()
-    output_image = remove(input_image)
-    return StreamingResponse(io.BytesIO(output_image), media_type="image/png")
+    result = remove(input_image)
+    output_path = f"static/{file.filename}"
+    
+    with open(output_path, "wb") as out_file:
+        out_file.write(result)
 
-# Run FastAPI in a separate thread
-def run_api():
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    return JSONResponse(content={"output_url": f"http://localhost:8001/{output_path}"})
 
-# Allow nested event loops for Streamlit
-nest_asyncio.apply()
-api_thread = threading.Thread(target=run_api)
-api_thread.start()
-
-# Streamlit UI
-st.title("Background Removal App")
-uploaded_file = st.file_uploader("Upload an Image", type=["png", "jpg", "jpeg"])
-
-if uploaded_file:
-    st.image(uploaded_file, caption="Original Image", use_column_width=True)
-    if st.button("Remove Background"):
-        output = remove(uploaded_file.read())
-        st.image(output, caption="Processed Image", use_column_width=True)
-        st.download_button(label="Download Image", data=output, file_name="no_bg.png", mime="image/png")
+# Run the FastAPI app with Uvicorn
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8001)
