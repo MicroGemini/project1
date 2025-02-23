@@ -1,6 +1,6 @@
 from flask import Flask, render_template_string
 
-# Initialize the Flask app
+# Initialize Flask app
 app = Flask(__name__)
 
 # Define a simple route
@@ -25,4 +25,4 @@ def greet():
 
 # Run the app
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=False)  # Disable debug mode
