@@ -4,3 +4,4 @@ rembg
 uvicorn
 nest-asyncio
 onnxruntime
+python-multipart
