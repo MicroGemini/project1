@@ -1,53 +1,36 @@
-from flask import Flask, request, jsonify, send_file, render_template
+import streamlit as st
 from rembg import remove
 from PIL import Image
-import os
+import io
 
-app = Flask(__name__)
+# Streamlit App Title
+st.title("Background Remover Tool")
+st.write("Upload an image, and we'll remove the background for you!")
 
-UPLOAD_FOLDER = 'uploads'
-OUTPUT_FOLDER = 'outputs'
+# File uploader
+uploaded_file = st.file_uploader("Choose an image file", type=["png", "jpg", "jpeg"])
 
-if not os.path.exists(UPLOAD_FOLDER):
-    os.makedirs(UPLOAD_FOLDER)
-
-if not os.path.exists(OUTPUT_FOLDER):
-    os.makedirs(OUTPUT_FOLDER)
-
-@app.route('/')
-def index():
-    return render_template('index.html')
-
-@app.route('/upload', methods=['POST'])
-def upload_image():
-    if 'file' not in request.files:
-        return jsonify({'error': 'No file part'}), 400
-
-    file = request.files['file']
-
-    if file.filename == '':
-        return jsonify({'error': 'No selected file'}), 400
-
-    if file:
-        # Save the uploaded file
-        input_path = os.path.join(UPLOAD_FOLDER, file.filename)
-        file.save(input_path)
-
-        # Remove the background
-        input_image = Image.open(input_path)
-        output_image = remove(input_image)
-
-        # Save the output image in PNG format
-        output_filename = os.path.splitext(file.filename)[0] + '.png'
-        output_path = os.path.join(OUTPUT_FOLDER, output_filename)
-        output_image.save(output_path, format="PNG")
-
-        return jsonify({'filename': output_filename})
-
-@app.route('/download/<filename>', methods=['GET'])
-def download_image(filename):
-    output_path = os.path.join(OUTPUT_FOLDER, filename)
-    return send_file(output_path, as_attachment=True)
-
-if __name__ == '__main__':
-    app.run(debug=True)
+if uploaded_file:
+    # Display original image
+    st.image(uploaded_file, caption='Original Image', use_column_width=True)
+    
+    # Load the image
+    input_image = Image.open(uploaded_file)
+    
+    # Remove background
+    output_image = remove(input_image)
+    
+    # Display result
+    st.image(output_image, caption='Image without Background', use_column_width=True)
+    
+    # Download button
+    img_bytes = io.BytesIO()
+    output_image.save(img_bytes, format='PNG')
+    img_bytes.seek(0)
+    
+    st.download_button(
+        label="Download Image",
+        data=img_bytes,
+        file_name="background_removed.png",
+        mime="image/png"
+    )
