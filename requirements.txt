@@ -3,3 +3,4 @@ fastapi
 rembg
 uvicorn
 nest-asyncio
+onnxruntime
